@@ -9,6 +9,6 @@ def back():
     im = ImageTk.PhotoImage(image)  
     canvas.create_image(400,235,image = im)
     canvas.pack()
-    tk1.Button(root1,text ='****************▂▃▅▆▇▇▇▇    数据可视化（周期估算）   ▇▇▇▇▆▅▃▂****************',font=12,height=2,command=back2.back2).pack(fill='both')
+    #tk1.Button(root1,text ='****************▂▃▅▆▇▇▇▇    数据可视化（周期估算）   ▇▇▇▇▆▅▃▂****************',font=12,height=2,command=back2.back2).pack(fill='both')
     tk1.Button(root1,text ='****************▂▃▅▆▇▇▇▇ 传感器的相关计算（相关系数）▇▇▇▇▆▅▃▂****************',font=12,height=2,command=related.related).pack(fill='both')
     root1.mainloop()
