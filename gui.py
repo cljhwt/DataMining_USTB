@@ -8,7 +8,7 @@ from tkinter import scrolledtext
 import pandas as pd
 from mlxtend.frequent_patterns import apriori
 from mlxtend.frequent_patterns import association_rules
-
+from transform import list2df
 
 class GUI(object):
     # 布局界面
@@ -32,15 +32,13 @@ class GUI(object):
         # 创建结果显示框
         self.text1 = scrolledtext.ScrolledText(self.window, height=28, width=23, font=('楷体', 13))
         self.text1.place(x=250, y=60)
-        self.text1.bind("<Button-1>", self.clear)
+
         # 各个频繁项集和强关联规则的输出显示
-        tk.Label(self.window, text='频繁项集和强关联规则', font=('楷体', 16, 'bold'), width=20, height=1).place(x=700,
-                                                                                                                y=20)
+        tk.Label(self.window, text='频繁项集和强关联规则', font=('楷体', 16, 'bold'), width=20, height=1).place(x=600,y=20)
         # 创建结果显示框
-        # self.text2 = scrolledtext.ScrolledText(self.window, height=28, width=60, font=('楷体', 10))
-        # self.text2.place(x=550, y=60)
-        # self.text2.bind("<Button-1>", self.clear)
-        self.df_c = ['antecedents', 'consequents', 'lift', 'confidence', 'support']
+
+        self.df_c = ['antecedents', 'consequents', 'confidence']
+
         self.table = ttk.Treeview(
             self.window,  #
             height=10,  # 表格显示的行数
@@ -48,6 +46,12 @@ class GUI(object):
             show='headings',  # 隐藏首列
         )
         self.table.place(x=550, y=60)
+        self.VScroll1 = ttk.Scrollbar(self.table, orient='vertical', command=self.table.yview)
+
+        self.VScroll1.place(relx=0.971, rely=0.028, relwidth=0.024, relheight=0.958)
+
+        self.table.configure(yscrollcommand=self.VScroll1.set)
+        command = self.table.yview
         for x in self.df_c:
             self.table.heading(x, text=x)
             self.table.column(x, width=120)
@@ -58,7 +62,7 @@ class GUI(object):
         self.entry1.place(x=10, y=100)
         # 自行设置最小支持度计数值,默认为0.5
         self.var1 = tk.StringVar()
-        self.var1.set('3')
+        self.var1.set('200')
         self.entry2 = tk.Entry(self.window, show=None, width='3', font=('Arial', 16), textvariable=self.var1)
         self.entry2.place(x=180, y=160)
         # 自行设置最小置信度参数值，默认为0.7
@@ -141,87 +145,41 @@ class GUI(object):
             for i in range(length):
                 list_result[i] = list_result[i].split(",")  # csv文件中的元素是以逗号分隔的
             return list_result
-    def apr(self):
-        # 将原始数据做数据清洗，剔除空值，将数据转成文本str格式
-        data = pd.read_csv(self.getnamefile(), header=None)
-        self.text1.insert("0.0", data.values)
-        self.text1.see("end")
-        corpus = pd.DataFrame(columns=['items'])
-        for row in range(data.shape[0]):
-            tmp = [i for i in data.iloc[row, :].values if str(i) != 'nan']
-            corpus.loc[row, 'items'] = ','.join(tmp)
-        # print(corpus)
-
-        # 将items进行multi-hot
-        corpus = corpus['items'].str.get_dummies(sep=',')
-        # print(corpus)
-
-        # 此处设置最小支持度为0.02，可以根据需求进行调参
-        frequent_itemsets = apriori(corpus, min_support=0.05, use_colnames=True)
-        rules = association_rules(frequent_itemsets, metric="lift", min_threshold=0.5)
-
-        # 按照提升度进行排序展示
-        rules_lift_rank = rules.sort_values(by=['lift'], ascending=False)
-        print(rules_lift_rank)
-
-        # 按照置信度进行排序展示
-        rules_confidence_rank = rules.sort_values(by=['confidence'], ascending=False)
-        print(rules_confidence_rank)
-
-        # 按照支持度（k=2）进行排序展示
-        rules_support_rank = rules.sort_values(by=['support'], ascending=False)
-        print(rules_support_rank)
-
-        rules['antecedents'] = rules['antecedents'].map(lambda x: str(x)[12:-3])
-        rules['consequents'] = rules['consequents'].map(lambda x: str(x)[12:-3])
-        rules['lift'] = rules['lift'].map(lambda x: round(x,4))
-        rules['confidence'] = rules['confidence'].map(lambda x: round(x, 4))
-        rules['support'] = rules['support'].map(lambda x: round(x, 4))
-
-        return rules
 
     def runApriori(self):
-        # loadDataSet = self.loadDataSet()
-        # C1 = self.createC1(loadDataSet)
-        # D = list(map(set, loadDataSet))
+        self.table.delete(*self.table.get_children())
+        self.text1.delete("1.0", "end")
+        loadDataSet = self.loadDataSet()
         minSupport = self.getDataSupport()
-        # L1, suppData0 = self.scanD(D, C1, minSupport)
-        # L, suppData = self.apriori(loadDataSet, minSupport)
+        L, suppData = self.apriori(loadDataSet, minSupport)
         minConf = self.getDataConfidence()
-        # rules = self.generateRules(L, suppData, minConf)
-        rules = self.apr()
-        table = rules[self.df_c]
+        rules = self.generateRules(L, suppData, minConf)
+        # # rules = self.apr()
+        rules_pd=list2df(rules)
+        table = rules_pd[self.df_c]
         for i in range(len(table)):
             self.table.insert('', i, values=table.iloc[i, :].tolist())
 
     def runFPGrowth(self):
+        self.table.delete(*self.table.get_children())
         self.text1.delete("1.0", "end")
-        self.text2.delete("1.0", "end")
         dataSet = self.loadDataSet()
         frozenDataSet = fp.transfer2FrozenDataSet(dataSet)
         minSupport = self.getDataSupport()
-        s = '#######################FP_Growth算法########################\n'
-        self.text2.insert('insert', s)
-        t = '\nFP树：\n'
-        self.text2.insert('insert', t)
         fptree, headPointTable = fp.createFPTree(frozenDataSet, minSupport)
         fptree.disp()
-        self.text2.insert('insert', fptree.display())
         frequentPatterns = {}
         prefix = set([])
         fp.mineFPTree(headPointTable, prefix, frequentPatterns, minSupport)
         t1 = '\n频繁项集：\n'
-        self.text2.insert('insert', t1)
         t2 = frequentPatterns
-        self.text2.insert('insert', t2)
         minConf = self.getDataConfidence()
         rules = []
         fp.rulesGenerator(frequentPatterns, minConf, rules)
-        t3 = '\n\n强关联规则：\n'
-        self.text2.insert('insert', t3)
-        for line in rules:
-            r = str(line[0]) + '-->' + str(line[1]) + '置信度：' + str(line[2]) + '\n'
-            self.text2.insert('insert', r)
+        rules_pd = list2df(rules)
+        table = rules_pd[self.df_c]
+        for i in range(len(table)):
+            self.table.insert('', i, values=table.iloc[i, :].tolist())
 
     # 创建集合C1，C1是大小为1的所有候选项集合
     def createC1(self, dataSet):
