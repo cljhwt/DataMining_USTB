@@ -172,6 +172,12 @@ class GUI(object):
         rules_support_rank = rules.sort_values(by=['support'], ascending=False)
         print(rules_support_rank)
 
+        rules['antecedents'] = rules['antecedents'].map(lambda x: str(x)[12:-3])
+        rules['consequents'] = rules['consequents'].map(lambda x: str(x)[12:-3])
+        rules['lift'] = rules['lift'].map(lambda x: round(x,4))
+        rules['confidence'] = rules['confidence'].map(lambda x: round(x, 4))
+        rules['support'] = rules['support'].map(lambda x: round(x, 4))
+
         return rules
 
     def runApriori(self):

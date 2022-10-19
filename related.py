@@ -19,11 +19,9 @@ def related():
     data = pd.read_csv('./Market_Basket_Optimisation.csv', header=None)
     root2 = Tk()
     root2.title("数据可视化")
-    root2.geometry("600x600")
+    root2.geometry("600x400")
     df_c=['antecedents', 'consequents', 'lift', 'confidence', 'support']
 
-    button1 = tk.Button(root2, text='查询', font=('微软雅黑', 12))
-    button1.grid(row=0, column=2)
     tree1 = ttk.Treeview(
         root2,  #
         height=15,  # 表格显示的行数
@@ -66,10 +64,15 @@ def related():
         print(rules_support_rank)
 
         table=rules[df_c]
+        table['antecedents'] = table['antecedents'].map(lambda x: str(x)[12:-3])
+        table['consequents'] = table['consequents'].map(lambda x: str(x)[12:-3])
+        table['lift'] = table['lift'].map(lambda x: round(x,4))
+        table['confidence'] = table['confidence'].map(lambda x: round(x, 4))
+        table['support'] = table['support'].map(lambda x: round(x, 4))
         for i in range(len(table)):
             tree1.insert('', i, values=table.iloc[i, :].tolist())
 
-    button3 = tk.Button(root2, text='查询', font=('微软雅黑', 12), command=apr)
-    button3.grid(row=1, column=1)
+    button3 = tk.Button(root2,text='查询', font=('微软雅黑', 12), command=apr)
+    button3.grid(row=3, column=1)
     #check2.grid(column=1, row=4, sticky=W)
     root2.mainloop()

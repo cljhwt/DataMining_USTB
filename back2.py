@@ -61,23 +61,5 @@ def back2():
     Label(root2,text="选择应变",font=20).pack()
     user_text2=Entry(root2)
     user_text2.pack()
-    def draw_Y():
-        f_plot.clear()
-        #y = ord(var.get())  #用字母表示时
-        if user_text2.get().isdigit():
-            test_YB = int(user_text2.get())-1
-        else :
-            messagebox.showinfo(title='提示',message = '输入的测试点超出范围，请重新输入！')
-        if test_YB<44 and test_YB>=0:
-            col_test_YB = sh2.col_values(test_YB)
-            x=np.arange(0,1078,1)
-            y=np.array(col_test_YB[1:])
-            f_plot.set(title='YB_self',xlabel='time/10min',ylabel='YingBian')
-            f_plot.plot(x,y)
-            canvs.draw()
-        else:
-            str1 = messagebox.showinfo(title='提示',message = '输入范围错误，请重新输入')
-            if str1 == 'ok':
-                return
-    Button(root2, text='选择测试点',command=draw_Y).pack()
+
     root2.mainloop()
